@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌈 Petualangan Seru di Dunia Gerak 🌈 - Game Edukasi IPA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Quicksand', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka One', cursive;
+        }
+        .btn-cartoon {
+            transition: all 0.15s ease;
+            box-shadow: 0px 6px 0px rgba(0, 0, 0, 0.25);
+        }
+        .btn-cartoon:active {
+            transform: translateY(4px);
+            box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.25);
+        }
+        .bg-pattern {
+            background-color: #7dd3fc;
+            background-image: radial-gradient(#ffffff 20%, transparent 20%);
+            background-size: 30px 30px;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-800 h-screen w-screen overflow-hidden flex flex-col justify-center items-center select-none">
+
+    <!-- GAME CONTAINER -->
+    <div id="game-app" class="relative w-full max-w-5xl h-full max-h-[720px] bg-sky-200 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border-0 sm:border-4 border-white">
+        
+        <!-- TOP CONTROL BAR -->
+        <header class="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-3 bg-white/80 backdrop-blur-md shadow-sm border-b border-white/50">
+            <div class="flex items-center gap-2">
+                <button onclick="Game.showMenu()" class="btn-cartoon bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold px-3 py-1.5 rounded-xl text-sm flex items-center gap-1">
+                    <i class="fa-solid fa-house"></i> <span class="hidden sm:inline">Menu</span>
+                </button>
+                <div class="bg-amber-100 border border-amber-300 text-amber-900 px-3 py-1 rounded-xl text-sm font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-star text-yellow-500 text-base"></i>
+                    <span id="star-count">0</span>
+                </div>
+            </div>
+
+            <!-- LEVEL TITLE / STATUS -->
+            <div id="header-level-title" class="font-heading text-sky-900 text-base sm:text-lg tracking-wide hidden md:block">
+                Petualangan Seru di Dunia Gerak
+            </div>
+
+            <!-- AUDIO & SETTINGS CONTROLS -->
+            <div class="flex items-center gap-2">
+                <button id="btn-tts" onclick="AudioEngine.toggleTTS()" title="Narator Suara" class="btn-cartoon bg-sky-400 hover:bg-sky-500 text-white p-2 rounded-xl text-sm w-9 h-9 flex items-center justify-center">
+                    <i class="fa-solid fa-volume-high" id="icon-tts"></i>
+                </button>
+                <button id="btn-music" onclick="AudioEngine.toggleMusic()" title="Musik Latar" class="btn-cartoon bg-emerald-400 hover:bg-emerald-500 text-white p-2 rounded-xl text-sm w-9 h-9 flex items-center justify-center">
+                    <i class="fa-solid fa-music" id="icon-music"></i>
+                </button>
+                <button onclick="Game.showInstructions()" title="Petunjuk" class="btn-cartoon bg-indigo-400 hover:bg-indigo-500 text-white p-2 rounded-xl text-sm w-9 h-9 flex items-center justify-center">
+                    <i class="fa-solid fa-circle-question"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN DISPLAY / CANVAS CONTAINER -->
+        <main class="relative flex-1 w-full h-full overflow-hidden">
+            <!-- CANVAS FOR GAMEPLAY -->
+            <canvas id="gameCanvas" class="w-full h-full block bg-sky-300"></canvas>
+
+            <!-- OVERLAY UI (Screens) -->
+            
+            <!-- 1. HOME SCREEN -->
+            <div id="screen-home" class="absolute inset-0 z-20 bg-pattern flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
+                <div class="max-w-md w-full bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-3xl border-4 border-sky-300 shadow-2xl animate-bounce-gentle my-auto">
+                    <div class="text-4xl sm:text-5xl mb-2">🌈 🚗 🚀</div>
+                    <h1 class="text-xl sm:text-3xl text-sky-600 mb-1 font-heading tracking-wide">PETUALANGAN SERU DI DUNIA GERAK</h1>
+                    <p class="text-slate-600 text-xs sm:text-sm font-semibold mb-5">Game Edukasi IPA Kelas VII SMP - Semester Ganjil</p>
+
+                    <!-- INPUT FORM NAMA & KELAS -->
+                    <div class="bg-sky-50 border-2 border-sky-200 p-4 rounded-2xl mb-5 text-left shadow-inner">
+                        <div class="mb-3">
+                            <label for="player-name" class="block text-xs font-bold text-sky-900 mb-1">
+                                <i class="fa-solid fa-user-astronaut text-sky-600 mr-1"></i> Nama Lengkap / Panggilan:
+                            </label>
+                            <input type="text" id="player-name" placeholder="Masukkan namamu..." class="w-full px-3 py-2 text-sm rounded-xl border-2 border-sky-300 focus:border-sky-500 focus:outline-none font-bold text-slate-800">
+                        </div>
+                        <div>
+                            <label for="player-class" class="block text-xs font-bold text-sky-900 mb-1">
+                                <i class="fa-solid fa-graduation-cap text-sky-600 mr-1"></i> Kelas SMP:
+                            </label>
+                            <input type="text" id="player-class" placeholder="Contoh: VII-A" value="VII" class="w-full px-3 py-2 text-sm rounded-xl border-2 border-sky-300 focus:border-sky-500 focus:outline-none font-bold text-slate-800">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 justify-center items-center">
+                        <button onclick="Game.startAdventure()" class="btn-cartoon bg-emerald-500 hover:bg-emerald-600 text-white font-heading text-base sm:text-lg px-8 py-3 rounded-2xl flex items-center gap-2 shadow-lg w-full justify-center">
+                            <i class="fa-solid fa-play"></i> MULAI PETUALANGAN
+                        </button>
+                        <button onclick="Game.showLevelSelect()" class="btn-cartoon bg-sky-500 hover:bg-sky-600 text-white font-heading text-sm sm:text-base px-6 py-2.5 rounded-2xl flex items-center gap-2 shadow-lg w-full justify-center">
+                            <i class="fa-solid fa-map"></i> PILIH LEVEL
+                        </button>
+                    </div>
+
+                    <!-- Song Lyrics Preview Button -->
+                    <div class="mt-5 pt-3 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                        <span>🎵 Lagu: "Ayo Bergerak!"</span>
+                        <button onclick="Game.showSongLyrics()" class="text-sky-600 hover:underline font-bold">Lihat Lirik</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. LEVEL SELECT SCREEN -->
+            <div id="screen-level-select" class="absolute inset-0 z-20 bg-sky-100/95 backdrop-blur-md flex flex-col p-6 hidden overflow-y-auto">
+                <h2 class="text-2xl sm:text-3xl font-heading text-sky-800 text-center my-4">PILIH PETUALANGANMU</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto my-auto w-full p-2" id="level-cards-container">
+                    <!-- Cards will be populated dynamically -->
+                </div>
+                <div class="text-center mt-4">
+                    <button onclick="Game.showHome()" class="btn-cartoon bg-slate-400 hover:bg-slate-500 text-white font-bold px-6 py-2 rounded-xl">
+                        Kembali
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. DIALOGUE / NARRATION POPUP -->
+            <div id="dialogue-box" class="absolute bottom-4 left-4 right-4 z-20 bg-white/95 border-4 border-sky-400 p-4 rounded-2xl shadow-2xl hidden flex flex-col sm:flex-row items-center gap-4 animate-bounce-gentle">
+                <div id="dialogue-avatar" class="w-16 h-16 sm:w-20 sm:w-20 flex-shrink-0 bg-sky-100 rounded-full border-2 border-sky-300 flex items-center justify-center text-3xl">
+                    👧
+                </div>
+                <div class="flex-1 text-center sm:text-left">
+                    <div id="dialogue-speaker" class="font-heading text-sky-700 text-sm sm:text-base">Mimi</div>
+                    <div id="dialogue-text" class="text-slate-700 text-xs sm:text-sm font-semibold leading-relaxed mt-1">
+                        Halo! Selamat datang di dunia gerak!
+                    </div>
+                </div>
+                <button id="dialogue-btn" onclick="Game.advanceDialogue()" class="btn-cartoon bg-amber-400 hover:bg-amber-500 text-amber-950 font-heading px-5 py-2 rounded-xl text-sm flex-shrink-0">
+                    Lanjut <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- 4. INTERACTIVE QUIZ / CHALLENGE MODAL -->
+            <div id="quiz-modal" class="absolute inset-0 z-20 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-3xl border-4 border-indigo-400 max-w-xl w-full p-6 shadow-2xl relative">
+                    <div class="flex items-center justify-between border-b pb-3 mb-4">
+                        <span id="quiz-category" class="bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1 rounded-full">Tantangan IPA</span>
+                        <span id="quiz-progress" class="text-slate-500 font-bold text-xs">Soal 1 dari 5</span>
+                    </div>
+                    <div id="quiz-question" class="font-bold text-slate-800 text-base sm:text-lg mb-6 leading-snug">
+                        Berapakah jarak total yang ditempuh jika Mimi berjalan 10 meter ke timur lalu 5 meter ke barat?
+                    </div>
+                    <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <!-- Options populated dynamically -->
+                    </div>
+                    <!-- Feedback box -->
+                    <div id="quiz-feedback" class="hidden p-3 rounded-xl text-sm font-bold mt-2"></div>
+                </div>
+            </div>
+
+            <!-- 5. GLB / GLBB SORTING MINI-GAME (LEVEL 4) -->
+            <div id="sorting-modal" class="absolute inset-0 z-20 bg-indigo-900/80 backdrop-blur-md flex flex-col p-4 sm:p-6 text-white hidden">
+                <h2 class="text-xl sm:text-2xl font-heading text-center text-amber-300 mb-2">Taman Bermain GLB & GLBB</h2>
+                <p class="text-center text-xs sm:text-sm text-indigo-200 mb-4">Kelompokkan peristiwa gerak di bawah ke dalam kategori GLB (Kecepatan Tetap) atau GLBB (Percepatan Tetap)!</p>
+                
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto w-full">
+                    <!-- GLB Dropzone -->
+                    <div id="zone-glb" class="bg-blue-600/40 border-2 border-dashed border-blue-300 rounded-2xl p-4 flex flex-col items-center">
+                        <h3 class="font-heading text-lg text-blue-200 mb-2">🚂 GLB (Kecepatan Tetap)</h3>
+                        <div id="items-glb" class="w-full flex-1 flex flex-col gap-2 overflow-y-auto p-1"></div>
+                    </div>
+                    <!-- GLBB Dropzone -->
+                    <div id="zone-glbb" class="bg-purple-600/40 border-2 border-dashed border-purple-300 rounded-2xl p-4 flex flex-col items-center">
+                        <h3 class="font-heading text-lg text-purple-200 mb-2">🚀 GLBB (Percepatan Tetap)</h3>
+                        <div id="items-glbb" class="w-full flex-1 flex flex-col gap-2 overflow-y-auto p-1"></div>
+                    </div>
+                </div>
+
+                <!-- Unsorted Items Deck -->
+                <div class="mt-4 bg-white/10 p-3 rounded-2xl max-w-4xl mx-auto w-full">
+                    <div class="text-xs font-bold text-amber-200 mb-2 text-center">PILIH KATEGORI UNTUK ITEM DI BAWAH INI:</div>
+                    <div id="sorting-deck" class="flex flex-wrap justify-center gap-2"></div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button id="btn-submit-sort" onclick="Level4.checkSorting()" class="btn-cartoon bg-emerald-500 hover:bg-emerald-600 text-white font-heading px-8 py-2 rounded-xl">
+                        Kirim Jawaban
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6. FINAL CERTIFICATE / VICTORY SCREEN -->
+            <div id="screen-victory" class="absolute inset-0 z-30 bg-pattern flex flex-col items-center justify-center p-4 hidden">
+                <div class="bg-white/95 backdrop-blur-lg border-8 border-amber-400 p-6 sm:p-8 rounded-3xl max-w-2xl w-full text-center shadow-2xl relative overflow-hidden">
+                    <div class="text-5xl mb-2">🏆</div>
+                    <h2 class="text-2xl sm:text-3xl font-heading text-amber-600">SERTIFIKAT KELULUSAN</h2>
+                    <p class="text-slate-500 font-bold text-xs sm:text-sm">Petualangan Seru di Dunia Gerak IPA Kelas VII</p>
+                    
+                    <div class="my-6 border-y-2 border-dashed border-amber-200 py-4">
+                        <p class="text-sm text-slate-600">Diberikan Kepada Ilmuwan Cilik:</p>
+                        <h1 class="text-2xl sm:text-4xl font-heading text-indigo-700 my-1" id="cert-name">Pahlawan Sains</h1>
+                        <p class="text-xs sm:text-sm text-amber-700 font-bold mb-2" id="cert-class">Kelas VII</p>
+                        <p class="text-xs sm:text-sm text-emerald-600 font-bold">Telah Berhasil Menyelesaikan Seluruh Misi & Kuis Gerak Benda!</p>
+                        <div class="flex justify-center gap-6 mt-4 text-slate-700 font-bold text-sm">
+                            <div>Total Bintang: <span id="final-stars" class="text-amber-500">0</span> ⭐</div>
+                            <div>Nilai Kuis: <span id="final-score" class="text-indigo-600">100</span> / 100</div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <button onclick="Game.restartGame()" class="btn-cartoon bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl text-sm">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Main Lagi
+                        </button>
+                        <button onclick="Game.showHome()" class="btn-cartoon bg-sky-500 hover:bg-sky-600 text-white font-bold px-6 py-2 rounded-xl text-sm">
+                            <i class="fa-solid fa-house mr-1"></i> Menu Utama
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SONG LYRICS MODAL -->
+            <div id="lyrics-modal" class="absolute inset-0 z-40 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+                <div class="bg-amber-50 border-4 border-amber-300 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl">
+                    <h3 class="font-heading text-amber-800 text-xl mb-2">🎵 Ayo Bergerak, Ayo Belajar!</h3>
+                    <div class="text-xs sm:text-sm text-slate-700 space-y-2 font-semibold my-4 italic max-h-60 overflow-y-auto p-2 bg-white/60 rounded-xl border">
+                        <p>Ayo kawan, mari belajar,</p>
+                        <p>Dunia gerak sangat menarik!</p>
+                        <p>Jarak dan pindah kita pahami,</p>
+                        <p>Kelajuan dihitung dengan teliti!</p>
+                        <p>GLB tetap, GLBB berubah,</p>
+                        <p>Percepatan kita pelajari bersama!</p>
+                        <p>Ayo bergerak, ayo mencoba,</p>
+                        <p>Belajar IPA sungguh menyenangkan!</p>
+                        <p>Bintang bersinar, hati gembira,</p>
+                        <p>Kita jadi ilmuwan muda!</p>
+                        <p>Ayo kawan, jangan menyerah,</p>
+                        <p>Petualangan kita sungguh meriah!</p>
+                    </div>
+                    <button onclick="document.getElementById('lyrics-modal').classList.add('hidden')" class="btn-cartoon bg-amber-500 text-white font-bold px-6 py-2 rounded-xl text-sm">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+
+            <!-- INSTRUCTIONS MODAL -->
+            <div id="instructions-modal" class="absolute inset-0 z-40 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+                <div class="bg-white border-4 border-indigo-400 rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+                    <h3 class="font-heading text-indigo-700 text-xl mb-3 text-center">📜 Cara Bermain</h3>
+                    <div class="text-xs sm:text-sm text-slate-600 space-y-3 font-semibold mb-6">
+                        <div class="flex items-center gap-3 bg-indigo-50 p-2.5 rounded-xl">
+                            <span class="text-2xl">⌨️</span>
+                            <span><strong>Komputer/Laptop:</strong> Gunakan tombol <strong>A / D</strong> atau <strong>Panah Kiri / Kanan</strong> untuk bergerak. Tombol <strong>SPACE</strong> untuk melompat/interaksi.</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-emerald-50 p-2.5 rounded-xl">
+                            <span class="text-2xl">📱</span>
+                            <span><strong>HP / Tablet:</strong> Gunakan tombol kontrol virtual di layar (Kiri, Kanan, Lompat).</span>
+                        </div>
+                        <div class="flex items-center gap-3 bg-amber-50 p-2.5 rounded-xl">
+                            <span class="text-2xl">⭐</span>
+                            <span>Kumpulkan bintang, pelajari konsep IPA Gerak Benda, dan selesaikan kuis di setiap level!</span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button onclick="document.getElementById('instructions-modal').classList.add('hidden')" class="btn-cartoon bg-indigo-600 text-white font-bold px-6 py-2 rounded-xl text-sm">
+                            Saya Mengerti!
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- TOUCH CONTROLS FOR MOBILE DEVICES -->
+        <footer id="touch-controls" class="z-30 bg-slate-800/80 backdrop-blur-md p-3 flex justify-between items-center border-t border-slate-700">
+            <div class="flex gap-2">
+                <button id="btn-left" class="btn-cartoon bg-sky-500 active:bg-sky-600 text-white w-14 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button id="btn-right" class="btn-cartoon bg-sky-500 active:bg-sky-600 text-white w-14 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            <div class="text-slate-300 text-xs font-bold hidden sm:block">
+                Petualangan IPA Kelas VII - Gerak Benda
+            </div>
+            <div>
+                <button id="btn-jump" class="btn-cartoon bg-amber-500 active:bg-amber-600 text-white px-6 h-12 rounded-2xl flex items-center justify-center font-heading text-sm shadow-lg gap-1">
+                    <i class="fa-solid fa-angles-up"></i> LOMPAT / AKSI
+                </button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ==========================================================================
+           1. AUDIO & SOUND ENGINE (Synthesized Audio & Indonesian Web Speech TTS)
+           ========================================================================== */
+        const AudioEngine = {
+            ctx: null,
+            musicPlaying: false,
+            ttsEnabled: true,
+            musicInterval: null,
+            synth: window.speechSynthesis || null,
+
+            init() {
+                try {
+                    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                } catch(e) {
+                    console.log("Web Audio not supported");
+                }
+            },
+
+            playSound(type) {
+                if(!this.ctx) return;
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                if(type === 'jump') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if(type === 'star') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if(type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if(type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(140, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            },
+
+            toggleMusic() {
+                this.musicPlaying = !this.musicPlaying;
+                const icon = document.getElementById('icon-music');
+                if(this.musicPlaying) {
+                    icon.className = 'fa-solid fa-music';
+                    this.startUpbeatMusic();
+                } else {
+                    icon.className = 'fa-solid fa-volume-xmark';
+                    this.stopMusic();
+                }
+            },
+
+            startUpbeatMusic() {
+                if(!this.ctx) this.init();
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                if(this.musicInterval) clearInterval(this.musicInterval);
+
+                const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C4, E4, G4, C5, G4, E4
+                let step = 0;
+
+                this.musicInterval = setInterval(() => {
+                    if(!this.musicPlaying) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(notes[step % notes.length], this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.2);
+                    step++;
+                }, 300);
+            },
+
+            stopMusic() {
+                if(this.musicInterval) clearInterval(this.musicInterval);
+            },
+
+            toggleTTS() {
+                this.ttsEnabled = !this.ttsEnabled;
+                const icon = document.getElementById('icon-tts');
+                if(this.ttsEnabled) {
+                    icon.className = 'fa-solid fa-volume-high';
+                    this.speak("Suara narator aktif.");
+                } else {
+                    icon.className = 'fa-solid fa-volume-xmark';
+                    if(this.synth) this.synth.cancel();
+                }
+            },
+
+            speak(text) {
+                if(!this.ttsEnabled || !this.synth) return;
+                this.synth.cancel(); // Stop current speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.1; // Slightly cheerful pitch
+                this.synth.speak(utterance);
+            }
+        };
+
+        /* ==========================================================================
+           2. DATA DEFINITION (Levels, Dialogue, Character Avatars)
+           ========================================================================== */
+        const CHARACTERS = {
+            Mimi: { name: 'Mimi', avatar: '👧', title: 'Ilmuwan Cilik', color: 'text-pink-600' },
+            Bimo: { name: 'Bimo', avatar: '👦', title: 'Petualang Handal', color: 'text-amber-600' },
+            Kiko: { name: 'Kiko', avatar: '🤖', title: 'Robot Pintar IPA', color: 'text-sky-600' },
+            Piko: { name: 'Piko', avatar: '🐰', title: 'Kelinci Cepat', color: 'text-emerald-600' }
+        };
+
+        const LEVELS = [
+            {
+                id: 1,
+                title: "Hutan Jarak & Perpindahan",
+                desc: "Pahami perbedaan antara jarak (lintasan total) dan perpindahan (perubahan posisi akhir).",
+                bg: "forest",
+                character: "Mimi",
+                quiz: {
+                    question: "Mimi berjalan ke utara sejauh 8 meter, lalu berbelok ke selatan sejauh 3 meter. Berapakah Jarak Total dan Perpindahan Mimi?",
+                    options: [
+                        { text: "Jarak = 11 m, Perpindahan = 5 m ke utara", correct: true },
+                        { text: "Jarak = 5 m, Perpindahan = 11 m ke utara", correct: false },
+                        { text: "Jarak = 8 m, Perpindahan = 3 m", correct: false },
+                        { text: "Jarak = 11 m, Perpindahan = 11 m", correct: false }
+                    ],
+                    explanation: "Jarak adalah TOTAL panjang lintasan (8m + 3m = 11m). Perpindahan adalah perubahan posisi dari awal ke akhir (8m - 3m = 5m ke utara)."
+                }
+            },
+            {
+                id: 2,
+                title: "Kota Kelajuan & Kecepatan",
+                desc: "Pelajari hitungan kelajuan rata-rata (Jarak ÷ Waktu) & Kecepatan (Perpindahan ÷ Waktu).",
+                bg: "city",
+                character: "Piko",
+                quiz: {
+                    question: "Sebuah mobil mainan menempuh jarak total 60 meter dalam waktu 10 sekon. Berapakah kelajuan rata-rata mobil tersebut?",
+                    options: [
+                        { text: "6 m/s", correct: true },
+                        { text: "50 m/s", correct: false },
+                        { text: "600 m/s", correct: false },
+                        { text: "10 m/s", correct: false }
+                    ],
+                    explanation: "Rumus Kelajuan Rata-rata = Jarak Total ÷ Waktu = 60 m ÷ 10 s = 6 m/s."
+                }
+            },
+            {
+                id: 3,
+                title: "Pegunungan Percepatan",
+                desc: "Pelajari rumus percepatan: a = (v_akhir - v_awal) ÷ waktu.",
+                bg: "mountain",
+                character: "Bimo",
+                quiz: {
+                    question: "Sepeda Bimo meluncur dari kecepatan 2 m/s menjadi 10 m/s dalam waktu 4 sekon. Berapakah percepatannya?",
+                    options: [
+                        { text: "2 m/s²", correct: true },
+                        { text: "4 m/s²", correct: false },
+                        { text: "8 m/s²", correct: false },
+                        { text: "12 m/s²", correct: false }
+                    ],
+                    explanation: "Percepatan a = (v_akhir - v_awal) / t = (10 - 2) / 4 = 8 / 4 = 2 m/s²."
+                }
+            },
+            {
+                id: 4,
+                title: "Lintasan Gerak Lurus (GLB & GLBB)",
+                desc: "Bedakan Gerak Lurus Beraturan (kecepatan tetap) dan Gerak Lurus Berubah Beraturan.",
+                bg: "park",
+                character: "Kiko",
+                type: "sorting"
+            },
+            {
+                id: 5,
+                title: "Laboratorium Sains Ajaib",
+                desc: "Misi Ujian Akhir 10 Soal IPA Gerak Benda untuk meraih Sertifikat Ilmuwan Cilik!",
+                bg: "lab",
+                character: "Kiko",
+                type: "final_quiz"
+            }
+        ];
+
+        /* ==========================================================================
+           3. CANVAS GAME ENGINE & ANIMATION
+           ========================================================================== */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game State Variables
+        let currentLevelIndex = 0;
+        let scoreStars = 0;
+        let gameState = 'HOME'; // HOME, DIALOGUE, PLAYING, QUIZ, SORTING, VICTORY
+        let dialogueQueue = [];
+        let currentDialogueIdx = 0;
+
+        // Player Data (Nama & Kelas)
+        let playerData = {
+            name: "Ilmuwan Cilik",
+            grade: "VII"
+        };
+
+        // Player physics & positions
+        let player = {
+            x: 50,
+            y: 200,
+            width: 45,
+            height: 60,
+            vx: 0,
+            vy: 0,
+            speed: 4,
+            jumpPower: -10,
+            grounded: false,
+            facingRight: true,
+            frame: 0
+        };
+
+        // Inputs state
+        const keys = { left: false, right: false, jump: false };
+
+        // Collectibles & Platforms
+        let collectibles = [];
+        let goalPost = { x: 850, y: 0, width: 40, height: 80 };
+        let platforms = [];
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Level Setup Function
+        function setupLevel(levelIdx) {
+            currentLevelIndex = levelIdx;
+            const lvl = LEVELS[levelIdx];
+
+            // Reset player position
+            player.x = 50;
+            player.y = canvas.height - 120;
+            player.vx = 0;
+            player.vy = 0;
+
+            // Platforms setup
+            platforms = [
+                { x: 0, y: canvas.height - 40, width: canvas.width * 2, height: 40 }, // Ground
+                { x: 180, y: canvas.height - 120, width: 120, height: 20 },
+                { x: 360, y: canvas.height - 180, width: 140, height: 20 },
+                { x: 560, y: canvas.height - 130, width: 120, height: 20 }
+            ];
+
+            // Collectible stars
+            collectibles = [
+                { x: 220, y: canvas.height - 160, collected: false },
+                { x: 420, y: canvas.height - 220, collected: false },
+                { x: 600, y: canvas.height - 170, collected: false }
+            ];
+
+            // Goal
+            goalPost.x = Math.max(700, canvas.width - 100);
+            goalPost.y = canvas.height - 120;
+
+            // Set Header Title
+            document.getElementById('header-level-title').innerText = `Level ${lvl.id}: ${lvl.title}`;
+
+            // Dialogues setup based on level
+            setupDialoguesForLevel(levelIdx);
+        }
+
+        function setupDialoguesForLevel(idx) {
+            const pName = playerData.name;
+            if(idx === 0) {
+                dialogueQueue = [
+                    { speaker: CHARACTERS.Mimi, text: `Halo ${pName} dari kelas ${playerData.grade}! Selamat datang di Petualangan Seru di Dunia Gerak!` },
+                    { speaker: CHARACTERS.Mimi, text: "Di Level 1 ini, kita akan mempelajari Jarak (total seluruh lintasan) dan Perpindahan (posisi awal ke akhir)." },
+                    { speaker: CHARACTERS.Piko, text: `Ayo ${pName}, kumpulkan semua bintang dan capai bendera finis!` }
+                ];
+            } else if(idx === 1) {
+                dialogueQueue = [
+                    { speaker: CHARACTERS.Piko, text: `Selamat datang di Kota Kelajuan dan Kecepatan, ${pName}!` },
+                    { speaker: CHARACTERS.Piko, text: "Ingat ya! Kelajuan Rata-rata = Jarak Total ÷ Waktu Tempuh. Satuan SI-nya adalah m/s!" }
+                ];
+            } else if(idx === 2) {
+                dialogueQueue = [
+                    { speaker: CHARACTERS.Bimo, text: `Wah, jalannya menanjak! Kecepatan sepeda Bimo berubah-ubah, ${pName}!` },
+                    { speaker: CHARACTERS.Bimo, text: "Perubahan kecepatan terhadap waktu disebut PERCEPATAN (a = (v_akhir - v_awal) / t)." }
+                ];
+            } else if(idx === 3) {
+                dialogueQueue = [
+                    { speaker: CHARACTERS.Kiko, text: `Bip-bop! Selamat datang di Taman Bermain Lintasan Gerak Lurus, ${pName}!` },
+                    { speaker: CHARACTERS.Kiko, text: "Di sini kita akan mengelompokkan gerak GLB (kecepatan tetap) dan GLBB (percepatan tetap)!" }
+                ];
+            } else if(idx === 4) {
+                dialogueQueue = [
+                    { speaker: CHARACTERS.Kiko, text: `Selamat ${pName}! Kamu telah mencapai Laboratorium Sains Ajaib!` },
+                    { speaker: CHARACTERS.Mimi, text: "Jawablah 10 soal kuis evaluasi untuk mendapatkan Sertifikat Kelulusan Ilmuwan Cilik!" }
+                ];
+            }
+            currentDialogueIdx = 0;
+            Game.showDialogue();
+        }
+
+        /* ==========================================================================
+           4. RENDERING ROUTINES (Canvas Art & Vector Graphics)
+           ========================================================================== */
+        function drawBackground(bgType) {
+            // Sky Gradient
+            let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            if(bgType === 'forest') {
+                grad.addColorStop(0, '#bae6fd');
+                grad.addColorStop(1, '#a7f3d0');
+            } else if(bgType === 'city') {
+                grad.addColorStop(0, '#fef08a');
+                grad.addColorStop(1, '#bae6fd');
+            } else if(bgType === 'mountain') {
+                grad.addColorStop(0, '#ddd6fe');
+                grad.addColorStop(1, '#fed7aa');
+            } else if(bgType === 'park') {
+                grad.addColorStop(0, '#bfdbfe');
+                grad.addColorStop(1, '#fef08a');
+            } else { // lab
+                grad.addColorStop(0, '#312e81');
+                grad.addColorStop(1, '#1e1b4b');
+            }
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background Scenery Elements
+            if(bgType !== 'lab') {
+                // Sun
+                ctx.fillStyle = '#fde047';
+                ctx.beginPath();
+                ctx.arc(canvas.width - 80, 80, 40, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Clouds
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(100, 60, 25, 0, Math.PI * 2);
+                ctx.arc(130, 50, 35, 0, Math.PI * 2);
+                ctx.arc(160, 60, 25, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Lab Background Beakers
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fillRect(50, 50, 60, 100);
+            }
+        }
+
+        function drawPlatforms() {
+            platforms.forEach(p => {
+                ctx.fillStyle = '#15803d'; // Green Top
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+                ctx.fillStyle = '#78350f'; // Dirt Ground
+                ctx.fillRect(p.x, p.y + 6, p.width, p.height - 6);
+            });
+        }
+
+        function drawCollectibles() {
+            collectibles.forEach(c => {
+                if(!c.collected) {
+                    ctx.fillStyle = '#eab308';
+                    ctx.font = '24px sans-serif';
+                    ctx.fillText('⭐', c.x, c.y);
+                }
+            });
+        }
+
+        function drawGoalPost() {
+            ctx.fillStyle = '#dc2626'; // Red Flag
+            ctx.beginPath();
+            ctx.moveTo(goalPost.x, goalPost.y);
+            ctx.lineTo(goalPost.x + 30, goalPost.y + 15);
+            ctx.lineTo(goalPost.x, goalPost.y + 30);
+            ctx.fill();
+
+            ctx.fillStyle = '#475569'; // Pole
+            ctx.fillRect(goalPost.x, goalPost.y, 5, goalPost.height);
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width/2, player.y + player.height/2);
+            if(!player.facingRight) ctx.scale(-1, 1);
+
+            // Animated Cute Science Kid (Mimi)
+            // Body / Dress
+            ctx.fillStyle = '#ec4899';
+            ctx.beginPath();
+            ctx.roundRect(-15, -10, 30, 35, 8);
+            ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#fde047'; // Blonde/Cute Hair back
+            ctx.beginPath();
+            ctx.arc(0, -22, 18, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.fillStyle = '#fed7aa'; // Face skin
+            ctx.beginPath();
+            ctx.arc(0, -20, 14, 0, Math.PI*2);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(5, -22, 2.5, 0, Math.PI*2);
+            ctx.arc(-5, -22, 2.5, 0, Math.PI*2);
+            ctx.fill();
+
+            // Smile
+            ctx.strokeStyle = '#9f1239';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -18, 5, 0.1, Math.PI - 0.1);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        /* ==========================================================================
+           5. GAME LOOP & PHYSICS UPDATE
+           ========================================================================== */
+        function updatePhysics() {
+            if(gameState !== 'PLAYING') return;
+
+            // Horizontal Movement
+            if(keys.left) {
+                player.vx = -player.speed;
+                player.facingRight = false;
+            } else if(keys.right) {
+                player.vx = player.speed;
+                player.facingRight = true;
+            } else {
+                player.vx *= 0.8; // Friction
+            }
+
+            // Jump
+            if(keys.jump && player.grounded) {
+                player.vy = player.jumpPower;
+                player.grounded = false;
+                AudioEngine.playSound('jump');
+            }
+
+            // Gravity
+            player.vy += 0.5;
+
+            // Apply Velocity
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Platform Collision Detection
+            player.grounded = false;
+            platforms.forEach(p => {
+                if(player.x < p.x + p.width &&
+                   player.x + player.width > p.x &&
+                   player.y + player.height >= p.y &&
+                   player.y + player.height <= p.y + 15 &&
+                   player.vy >= 0) {
+                    player.grounded = true;
+                    player.vy = 0;
+                    player.y = p.y - player.height;
+                }
+            });
+
+            // Boundary checks
+            if(player.x < 0) player.x = 0;
+
+            // Collectible Star Pickup
+            collectibles.forEach(c => {
+                if(!c.collected && Math.hypot(player.x - c.x, player.y - c.y) < 35) {
+                    c.collected = true;
+                    scoreStars += 10;
+                    document.getElementById('star-count').innerText = scoreStars;
+                    AudioEngine.playSound('star');
+                }
+            });
+
+            // Goal reached check
+            if(player.x + player.width >= goalPost.x) {
+                if(LEVELS[currentLevelIndex].type === 'sorting') {
+                    Game.startSortingMiniGame();
+                } else if(LEVELS[currentLevelIndex].type === 'final_quiz') {
+                    Game.startFinalQuiz();
+                } else {
+                    Game.showQuizModal();
+                }
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground(LEVELS[currentLevelIndex].bg);
+            drawPlatforms();
+            drawCollectibles();
+            drawGoalPost();
+            drawPlayer();
+
+            updatePhysics();
+            requestAnimationFrame(gameLoop);
+        }
+
+        /* ==========================================================================
+           6. CONTROLLER / EVENT LISTENERS
+           ========================================================================== */
+        window.addEventListener('keydown', e => {
+            if(e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
+            if(e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+            if(e.key === ' ' || e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.jump = true;
+        });
+
+        window.addEventListener('keyup', e => {
+            if(e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
+            if(e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+            if(e.key === ' ' || e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.jump = false;
+        });
+
+        // Touch Control Binding
+        const bindTouch = (id, keyName) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+            btn.addEventListener('mousedown', () => keys[keyName] = true);
+            btn.addEventListener('mouseup', () => keys[keyName] = false);
+        };
+        bindTouch('btn-left', 'left');
+        bindTouch('btn-right', 'right');
+        bindTouch('btn-jump', 'jump');
+
+        /* ==========================================================================
+           7. GAME CONTROLLER & UI MANAGER
+           ========================================================================== */
+        const Game = {
+            savePlayerData() {
+                const nameInput = document.getElementById('player-name').value.trim();
+                const classInput = document.getElementById('player-class').value.trim();
+
+                if(nameInput) playerData.name = nameInput;
+                if(classInput) playerData.grade = classInput;
+
+                document.getElementById('cert-name').innerText = playerData.name;
+                document.getElementById('cert-class').innerText = `Kelas ${playerData.grade}`;
+            },
+
+            startAdventure() {
+                this.savePlayerData();
+                this.hideAllScreens();
+                setupLevel(0);
+                AudioEngine.startUpbeatMusic();
+            },
+
+            showHome() {
+                this.hideAllScreens();
+                document.getElementById('screen-home').classList.remove('hidden');
+                gameState = 'HOME';
+            },
+
+            showLevelSelect() {
+                this.savePlayerData();
+                this.hideAllScreens();
+                const container = document.getElementById('level-cards-container');
+                container.innerHTML = '';
+
+                LEVELS.forEach((lvl, idx) => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-2xl border-4 border-sky-300 shadow-md flex flex-col justify-between hover:scale-105 transition cursor-pointer";
+                    card.onclick = () => {
+                        this.hideAllScreens();
+                        setupLevel(idx);
+                    };
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="bg-sky-100 text-sky-700 text-xs font-bold px-2.5 py-1 rounded-full">Level ${lvl.id}</span>
+                                <span class="text-xl">⭐</span>
+                            </div>
+                            <h3 class="font-heading text-slate-800 text-base mb-1">${lvl.title}</h3>
+                            <p class="text-xs text-slate-500">${lvl.desc}</p>
+                        </div>
+                        <button class="btn-cartoon bg-sky-500 text-white font-bold text-xs py-2 rounded-xl mt-4">Mainkan</button>
+                    `;
+                    container.appendChild(card);
+                });
+
+                document.getElementById('screen-level-select').classList.remove('hidden');
+            },
+
+            showDialogue() {
+                gameState = 'DIALOGUE';
+                if(currentDialogueIdx >= dialogueQueue.length) {
+                    document.getElementById('dialogue-box').classList.add('hidden');
+                    gameState = 'PLAYING';
+                    return;
+                }
+
+                const d = dialogueQueue[currentDialogueIdx];
+                document.getElementById('dialogue-avatar').innerText = d.speaker.avatar;
+                document.getElementById('dialogue-speaker').innerText = d.speaker.name;
+                document.getElementById('dialogue-text').innerText = d.text;
+                document.getElementById('dialogue-box').classList.remove('hidden');
+
+                // Speak via Indonesian TTS Engine
+                AudioEngine.speak(d.text);
+            },
+
+            advanceDialogue() {
+                currentDialogueIdx++;
+                this.showDialogue();
+            },
+
+            showQuizModal() {
+                gameState = 'QUIZ';
+                const lvl = LEVELS[currentLevelIndex];
+                const quiz = lvl.quiz;
+
+                document.getElementById('quiz-category').innerText = `Kuis Level ${lvl.id}`;
+                document.getElementById('quiz-progress').innerText = `1 Tantangan Utuh`;
+                document.getElementById('quiz-question').innerText = quiz.question;
+
+                const optionsContainer = document.getElementById('quiz-options');
+                optionsContainer.innerHTML = '';
+                document.getElementById('quiz-feedback').classList.add('hidden');
+
+                quiz.options.forEach((opt) => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-cartoon bg-slate-100 hover:bg-sky-100 text-slate-800 text-xs sm:text-sm font-semibold p-3 rounded-2xl border-2 border-slate-200 text-left leading-snug";
+                    btn.innerText = opt.text;
+                    btn.onclick = () => this.checkQuizAnswer(opt.correct, quiz.explanation);
+                    optionsContainer.appendChild(btn);
+                });
+
+                document.getElementById('quiz-modal').classList.remove('hidden');
+            },
+
+            checkQuizAnswer(isCorrect, explanation) {
+                const feedback = document.getElementById('quiz-feedback');
+                feedback.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-rose-100', 'text-rose-800');
+
+                if(isCorrect) {
+                    AudioEngine.playSound('correct');
+                    AudioEngine.speak(`Wah, hebat sekali ${playerData.name}! Jawabanmu benar!`);
+                    feedback.classList.add('bg-emerald-100', 'text-emerald-800');
+                    feedback.innerHTML = `<strong>✨ Benar Sekali!</strong><br>${explanation}`;
+                    scoreStars += 20;
+                    document.getElementById('star-count').innerText = scoreStars;
+
+                    setTimeout(() => {
+                        document.getElementById('quiz-modal').classList.add('hidden');
+                        if(currentLevelIndex < LEVELS.length - 1) {
+                            setupLevel(currentLevelIndex + 1);
+                        } else {
+                            this.showVictoryScreen();
+                        }
+                    }, 2500);
+                } else {
+                    AudioEngine.playSound('wrong');
+                    AudioEngine.speak(`Ups, belum tepat ${playerData.name}! Coba lagi!`);
+                    feedback.classList.add('bg-rose-100', 'text-rose-800');
+                    feedback.innerHTML = `<strong>Ups! Kurang tepat.</strong><br>Ayo pelajari lagi penjelasannya!`;
+                }
+            },
+
+            startSortingMiniGame() {
+                gameState = 'SORTING';
+                Level4.init();
+            },
+
+            startFinalQuiz() {
+                gameState = 'QUIZ';
+                FinalQuizEngine.init();
+            },
+
+            showVictoryScreen() {
+                gameState = 'VICTORY';
+                this.hideAllScreens();
+                document.getElementById('final-stars').innerText = scoreStars;
+                document.getElementById('screen-victory').classList.remove('hidden');
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                AudioEngine.speak(`Selamat ${playerData.name}! Kamu telah menyelesaikan seluruh tantangan di Dunia Gerak!`);
+            },
+
+            showSongLyrics() {
+                document.getElementById('lyrics-modal').classList.remove('hidden');
+            },
+
+            showInstructions() {
+                document.getElementById('instructions-modal').classList.remove('hidden');
+            },
+
+            showMenu() {
+                this.showHome();
+            },
+
+            restartGame() {
+                scoreStars = 0;
+                document.getElementById('star-count').innerText = scoreStars;
+                this.startAdventure();
+            },
+
+            hideAllScreens() {
+                document.getElementById('screen-home').classList.add('hidden');
+                document.getElementById('screen-level-select').classList.add('hidden');
+                document.getElementById('dialogue-box').classList.add('hidden');
+                document.getElementById('quiz-modal').classList.add('hidden');
+                document.getElementById('sorting-modal').classList.add('hidden');
+                document.getElementById('screen-victory').classList.add('hidden');
+            }
+        };
+
+        /* ==========================================================================
+           8. LEVEL 4 SORTING MINI-GAME MODULE
+           ========================================================================== */
+        const Level4 = {
+            items: [
+                { id: 1, text: "Kereta rel melaju kecepatan konstan 60 km/jam", category: "glb" },
+                { id: 2, text: "Buah kelapa jatuh bebas dari pohonnya", category: "glbb" },
+                { id: 3, text: "Mobil mainan dengan kecepatan tetap 2 m/s", category: "glb" },
+                { id: 4, text: "Sepeda rem mendadak hingga berhenti", category: "glbb" }
+            ],
+            userSelections: {},
+
+            init() {
+                this.userSelections = {};
+                document.getElementById('sorting-modal').classList.remove('hidden');
+                this.renderDeck();
+            },
+
+            renderDeck() {
+                const deck = document.getElementById('sorting-deck');
+                const glbZone = document.getElementById('items-glb');
+                const glbbZone = document.getElementById('items-glbb');
+
+                deck.innerHTML = '';
+                glbZone.innerHTML = '';
+                glbbZone.innerHTML = '';
+
+                this.items.forEach(item => {
+                    const sel = this.userSelections[item.id];
+                    const card = document.createElement('div');
+                    card.className = "bg-white text-slate-800 text-xs p-2.5 rounded-xl font-bold shadow flex justify-between items-center gap-2";
+                    card.innerHTML = `<span>${item.text}</span>`;
+
+                    if(!sel) {
+                        const btnGLB = document.createElement('button');
+                        btnGLB.className = "bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded-lg";
+                        btnGLB.innerText = "+ GLB";
+                        btnGLB.onclick = () => { this.userSelections[item.id] = 'glb'; this.renderDeck(); };
+
+                        const btnGLBB = document.createElement('button');
+                        btnGLBB.className = "bg-purple-500 hover:bg-purple-600 text-white text-xs px-2 py-1 rounded-lg";
+                        btnGLBB.innerText = "+ GLBB";
+                        btnGLBB.onclick = () => { this.userSelections[item.id] = 'glbb'; this.renderDeck(); };
+
+                        const actionDiv = document.createElement('div');
+                        actionDiv.className = "flex gap-1 flex-shrink-0";
+                        actionDiv.appendChild(btnGLB);
+                        actionDiv.appendChild(btnGLBB);
+                        card.appendChild(actionDiv);
+
+                        deck.appendChild(card);
+                    } else if(sel === 'glb') {
+                        glbZone.appendChild(card);
+                    } else if(sel === 'glbb') {
+                        glbbZone.appendChild(card);
+                    }
+                });
+            },
+
+            checkSorting() {
+                let allCorrect = true;
+                this.items.forEach(item => {
+                    if(this.userSelections[item.id] !== item.category) {
+                        allCorrect = false;
+                    }
+                });
+
+                if(allCorrect && Object.keys(this.userSelections).length === this.items.length) {
+                    AudioEngine.playSound('correct');
+                    AudioEngine.speak("Luar biasa! Pengelompokkan GLB dan GLBB kamu sempurna!");
+                    scoreStars += 30;
+                    document.getElementById('star-count').innerText = scoreStars;
+                    document.getElementById('sorting-modal').classList.add('hidden');
+                    setupLevel(4); // Move to final lab level
+                } else {
+                    AudioEngine.playSound('wrong');
+                    AudioEngine.speak("Masih ada yang keliru, coba periksa kembali!");
+                }
+            }
+        };
+
+        /* ==========================================================================
+           9. LEVEL 5 FINAL 10-QUESTION EVALUATION QUIZ
+           ========================================================================== */
+        const FinalQuizEngine = {
+            questions: [
+                { q: "1. Perubahan posisi suatu benda terhadap titik acuan disebut...", opts: ["Gerak", "Jarak", "Kelajuan", "Massa"], ans: 0 },
+                { q: "2. Total seluruh panjang lintasan yang ditempuh benda tanpa memperhatikan arah adalah...", opts: ["Perpindahan", "Jarak", "Kecepatan", "Percepatan"], ans: 1 },
+                { q: "3. Satuan Internasional (SI) untuk kelajuan dan kecepatan adalah...", opts: ["km/jam", "m/s", "m/s²", "cm/s"], ans: 1 },
+                { q: "4. Rumus kelajuan rata-rata adalah...", opts: ["v = s × t", "v = s ÷ t", "v = t ÷ s", "v = a × t"], ans: 1 },
+                { q: "5. Benda yang bergerak lurus dengan kecepatan tetap mengalami gerak...", opts: ["GLB", "GLBB", "Gerak Melingkar", "Gerak Acak"], ans: 0 },
+                { q: "6. Benda jatuh bebas mengalami gerak...", opts: ["GLB", "GLBB Dipercepat", "GLBB Diperlambat", "Kecepatan Tetap"], ans: 1 },
+                { q: "7. Satuan SI untuk percepatan adalah...", opts: ["m/s", "m/s²", "km/s", "m²/s"], ans: 1 },
+                { q: "8. Jika kecepatan awal 0 m/s dan kecepatan akhir 20 m/s dalam 5 sekon, percepatannya adalah...", opts: ["4 m/s²", "5 m/s²", "20 m/s²", "100 m/s²"], ans: 0 },
+                { q: "9. Alat pengukur kelajuan pada kendaraan bermotor dinamakan...", opts: ["Thermometer", "Speedometer", "Barometer", "Hydrometer"], ans: 1 },
+                { q: "10. Perpindahan adalah besaran yang memiliki...", opts: ["Nilai saja", "Nilai dan Arah", "Waktu saja", "Suhu"], ans: 1 }
+            ],
+            currentIdx: 0,
+            score: 0,
+
+            init() {
+                this.currentIdx = 0;
+                this.score = 0;
+                this.renderQuestion();
+            },
+
+            renderQuestion() {
+                const qData = this.questions[this.currentIdx];
+                document.getElementById('quiz-category').innerText = "Kuis Final Evaluasi IPA";
+                document.getElementById('quiz-progress').innerText = `Soal ${this.currentIdx + 1} dari 10`;
+                document.getElementById('quiz-question').innerText = qData.q;
+
+                const optsBox = document.getElementById('quiz-options');
+                optsBox.innerHTML = '';
+                document.getElementById('quiz-feedback').classList.add('hidden');
+
+                qData.opts.forEach((optText, oIdx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-cartoon bg-slate-100 hover:bg-sky-100 text-slate-800 text-xs sm:text-sm font-semibold p-3 rounded-2xl border-2 border-slate-200 text-left leading-snug";
+                    btn.innerText = optText;
+                    btn.onclick = () => this.submitAnswer(oIdx);
+                    optsBox.appendChild(btn);
+                });
+
+                document.getElementById('quiz-modal').classList.remove('hidden');
+            },
+
+            submitAnswer(optIdx) {
+                const qData = this.questions[this.currentIdx];
+                if(optIdx === qData.ans) {
+                    this.score += 10;
+                    AudioEngine.playSound('correct');
+                } else {
+                    AudioEngine.playSound('wrong');
+                }
+
+                this.currentIdx++;
+                if(this.currentIdx < this.questions.length) {
+                    this.renderQuestion();
+                } else {
+                    document.getElementById('quiz-modal').classList.add('hidden');
+                    document.getElementById('final-score').innerText = this.score;
+                    Game.showVictoryScreen();
+                }
+            }
+        };
+
+        /* ==========================================================================
+           10. INITIALIZATION ON LOAD
+           ========================================================================== */
+        window.onload = function() {
+            AudioEngine.init();
+            gameLoop();
+            Game.showHome();
+        };
+    </script>
+</body>
+</html>
